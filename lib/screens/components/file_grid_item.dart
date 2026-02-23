@@ -85,16 +85,16 @@ class _FileItemState extends ConsumerState<FileItem> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               /// 🔹 Preview / Icon area (FIXED HEIGHT)
-              SizedBox(height: 80, child: Center(child: _buildPreview(state))),
+              SizedBox(height: 70, child: Center(child: _buildPreview(state))),
 
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
 
               /// 🔹 Text must be flexible
               Expanded(
                 child: Text(
                   widget.file.name,
                   maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                  overflow: TextOverflow.clip,
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 11),
                 ),

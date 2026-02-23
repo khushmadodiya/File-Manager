@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 
 class BubbleDownloadDialog extends StatelessWidget {
   final String msg;
-  const BubbleDownloadDialog({super.key, this.msg = "Downloading..."});
+  final bool isLoading;
+  const BubbleDownloadDialog({super.key, this.msg = "Downloading...",this.isLoading = true});
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -28,7 +29,7 @@ class BubbleDownloadDialog extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const SizedBox(
+                    if(isLoading) SizedBox(
                       width: 26,
                       height: 26,
                       child: CircularProgressIndicator(

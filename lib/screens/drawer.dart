@@ -104,7 +104,7 @@ class _MobileStyleDrawerScreenState extends State<MobileStyleDrawerScreen> {
                       itemCount: provider.files.length,
                       gridDelegate:
                           const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 130,
+                            maxCrossAxisExtent: 140,
                             mainAxisSpacing: 16,
                             crossAxisSpacing: 16,
                             childAspectRatio: 0.85,

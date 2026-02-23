@@ -1,3 +1,7 @@
+import 'dart:io';
+import 'dart:ui';
+
+import 'package:android_to_mac_drop/model/device.dart';
 import 'package:android_to_mac_drop/provider/device_file_provider.dart';
 import 'package:android_to_mac_drop/screens/drawer.dart';
 import 'package:android_to_mac_drop/service/adb_service.dart';
@@ -6,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart';
 
+import 'components/dialogue/download_dialogue.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,8 +29,18 @@ void main() async {
   //   await windowManager.show();
   //   await windowManager.focus();
   // });
-
-  final devices = await   AdbService.getDevices();
+  List<Device> devices = [];
+  var adbStatus = false;
+  try {
+    // final res = await AdbService.run(["--version"]);
+    devices = await AdbService.getDevices();
+    adbStatus = true;
+  } catch (e) {
+    print("error $e");
+    if (e.toString().contains("No such file or directory")) {
+      adbStatus = false;
+    }
+  }
 
   runApp(
     MultiProvider(
@@ -39,11 +54,134 @@ void main() async {
           darkTheme: AppTheme.dark(),
           themeMode: ThemeMode.system,
           debugShowCheckedModeBanner: false,
-          home: MobileStyleDrawerScreen(devices: devices),
+          home: adbStatus ? MobileStyleDrawerScreen(devices: devices) : MyApp(),
         ),
       ),
     ),
   );
+}
+
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final List<Device> devices = [];
+  var logs = "Setting Environment";
+@override
+  void initState() {
+    // TODO: implement initState
+  getDevices();
+  }
+  @override
+  Widget build(BuildContext context) {
+
+    return Scaffold(
+      body: Center(
+        child: Center(
+          child: Material(
+            color: Colors.transparent,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                child: Container(
+                  width: 400,
+                  height: 400,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.44),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: Colors.white.withOpacity(0.15)),
+                  ),
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: ListView(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              logs,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void getDevices() async {
+    try {
+      final res = await AdbService.run(["--version"]);
+      print("result version $res");
+    } catch (e) {
+      print("error $e");
+      if (e.toString().contains("No such file or directory")) {
+        installAdbWithProgress(
+          onLog: (val) {
+            logs = "$logs\n $val";
+            print(logs);
+            setState(() {});
+          },
+          onFinish: (status) async{
+            final devices = await AdbService.getDevices();
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MobileStyleDrawerScreen(devices: devices),
+              ),
+                  (route) => false,
+            );
+          },
+        );
+      }
+    }
+
+
+  }
+
+  Future<void> installAdbWithProgress({
+    required void Function(String log) onLog,
+    required void Function(bool success) onFinish,
+  }) async {
+    try {
+      final process = await Process.start('brew', [
+        'install',
+        'android-platform-tools',
+      ], runInShell: true);
+
+      // stdout (normal progress)
+      process.stdout.transform(SystemEncoding().decoder).listen((data) {
+        onLog(data);
+      });
+
+      // stderr (warnings/errors)
+      process.stderr.transform(SystemEncoding().decoder).listen((data) {
+        onLog(data);
+      });
+
+      final exitCode = await process.exitCode;
+      onFinish(exitCode == 0);
+    } catch (e) {
+      onLog(e.toString());
+      onFinish(false);
+    }
+  }
 }
 
 // class RunMacCmd extends StatefulWidget {
