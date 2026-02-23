@@ -109,7 +109,9 @@ class _FileItemState extends ConsumerState<FileItem> {
   Widget _buildPreview(FileItemState state) {
     if (state.previewFile != null &&
         Utils().isImage(file: state.previewFile!)) {
-      return Image.file(state.previewFile!, fit: BoxFit.cover);
+      return ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.file(state.previewFile!, fit: BoxFit.cover));
     }
     return Icon(
       widget.file.isDirectory ? Icons.folder : Icons.insert_drive_file,

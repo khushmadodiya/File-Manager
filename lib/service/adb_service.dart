@@ -44,7 +44,7 @@ class AdbService {
 
     final output = await runShell(
       deviceId,
-      'ls "$path"',
+      'ls -t "$path"',
     );
 
     print(output);
