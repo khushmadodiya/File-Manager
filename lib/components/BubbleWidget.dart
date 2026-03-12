@@ -16,7 +16,7 @@ class BubbleWidget extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
             color: Colors.black.withOpacity(0.22),
             borderRadius: BorderRadius.circular(14),

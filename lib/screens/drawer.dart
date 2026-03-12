@@ -8,6 +8,7 @@ import '../components/BubbleWidget.dart';
 import '../components/context_menue.dart';
 import '../model/context_menu_item.dart';
 import '../provider/states/file_itme_state.dart';
+import '../service/adb_service.dart';
 import 'components/file_grid_item.dart';
 import '../model/device.dart';
 import '../provider/device_file_provider.dart';
@@ -63,7 +64,17 @@ class _MobileStyleDrawerScreenState extends State<MobileStyleDrawerScreen> {
                     ),
                   ),
                   SizedBox(height: 10),
-                  ...widget.devices.map(
+                  InkWell(
+                    onTap: () async {
+                      final devices = await AdbService.getDevices();
+                      provider.init(devices);
+                    },
+                    child: Container(
+                      alignment: Alignment.centerRight,
+                      child: Icon(Icons.refresh),
+                    ),
+                  ),
+                  ...?provider.devices?.map(
                     (device) => ListTile(
                       hoverColor: Colors.transparent,
                       focusColor: Colors.transparent,
@@ -90,41 +101,60 @@ class _MobileStyleDrawerScreenState extends State<MobileStyleDrawerScreen> {
                 ? const Center(child: Text('Select a device'))
                 : provider.isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : Listener(
-                    behavior: HitTestBehavior.translucent,
-                    onPointerDown: (event) {
-                      if (event.kind == PointerDeviceKind.mouse &&
-                          event.buttons == kSecondaryMouseButton && provider.isLoading) {
-                        // This only fires when click is NOT handled by children
-                        // showContextMenu(context, event.position);
-                      }
-                    },
-                    child: GridView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: provider.files.length,
-                      gridDelegate:
-                          const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 140,
-                            mainAxisSpacing: 16,
-                            crossAxisSpacing: 16,
-                            childAspectRatio: 0.85,
+                : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(6.0),
+                        child: BubbleWidget(
+                          child: InkWell(
+                              child: Icon(Icons.arrow_back_ios,size: 20,),
+                            onTap: ()async{
+                               await provider.exitDirectory();
+                            },
                           ),
-                      itemBuilder: (_, index) {
-                        final file = provider.files[index];
-                        return ChangeNotifierProvider(
-                          create: (_) => DeviceFileProvider(),
-                          child: FileItem(
-                            file: file,
-                            devicePath: provider.currentPath,
-                            onOpen: file.isDirectory
-                                ? () => provider.openDirectory(file)
-                                : null,
-                            reload: provider.loadFiles,
-                            deviceId: provider.selectedDevice?.id ?? "",
+                        ),
+                      ),
+                      Expanded(
+                        child: Listener(
+                          behavior: HitTestBehavior.translucent,
+                          onPointerDown: (event) {
+                            if (event.kind == PointerDeviceKind.mouse &&
+                                event.buttons == kSecondaryMouseButton &&
+                                provider.isLoading) {
+                              // This only fires when click is NOT handled by children
+                              // showContextMenu(context, event.position);
+                            }
+                          },
+                          child: GridView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: provider.files.length,
+                            gridDelegate:
+                                const SliverGridDelegateWithMaxCrossAxisExtent(
+                                  maxCrossAxisExtent: 140,
+                                  mainAxisSpacing: 16,
+                                  crossAxisSpacing: 16,
+                                  childAspectRatio: 0.85,
+                                ),
+                            itemBuilder: (_, index) {
+                              final file = provider.files[index];
+                              return ChangeNotifierProvider(
+                                create: (_) => DeviceFileProvider(),
+                                child: FileItem(
+                                  file: file,
+                                  devicePath: provider.currentPath,
+                                  onOpen: file.isDirectory
+                                      ? () => provider.openDirectory(file)
+                                      : null,
+                                  reload: provider.loadFiles,
+                                  deviceId: provider.selectedDevice?.id ?? "",
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                      ),
+                    ],
                   ),
           ),
         ],
